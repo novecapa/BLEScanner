@@ -1,3 +1,5 @@
+## WIP!
+
 # 📡 BLE Scanner iOS (SwiftUI)
 
 A **Bluetooth Low Energy (BLE) scanner** for iOS, built with **SwiftUI** and **CoreBluetooth**.  
