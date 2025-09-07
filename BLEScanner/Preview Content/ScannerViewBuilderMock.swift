@@ -8,6 +8,8 @@
 import CoreBluetooth
 
 final class BluetoothScannerMock: BluetoothScannerProtocol {
+    var delegate: (any BluetoothScannerDelegate)?
+    
     var peripherals: [UUID : DiscoveredPeripheral] {
         [UUID(): .mock]
     }

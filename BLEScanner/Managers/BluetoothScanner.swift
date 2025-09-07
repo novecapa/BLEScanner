@@ -7,7 +7,13 @@
 
 import CoreBluetooth
 
+protocol BluetoothScannerDelegate: AnyObject {
+    func scannerDidUpdatePeripherals(_ peripherals: [UUID: DiscoveredPeripheral])
+    func scannerDidUpdateState(_ state: CBManagerState, authorization: CBManagerAuthorization)
+}
+
 protocol BluetoothScannerProtocol {
+    var delegate: BluetoothScannerDelegate? { get set }
 
     var peripherals: [UUID: DiscoveredPeripheral] { get }
     var state: CBManagerState { get }
@@ -23,6 +29,8 @@ final class BluetoothScanner: NSObject, ObservableObject {
     @Published private(set) var peripherals: [UUID: DiscoveredPeripheral] = [:]
     @Published private(set) var state: CBManagerState = .unknown
     @Published private(set) var authorization: CBManagerAuthorization = .notDetermined
+
+    weak var delegate: BluetoothScannerDelegate?
 
     private var central: CBCentralManager!
     private let queue = DispatchQueue(label: "ble.scanner.queue")
@@ -50,6 +58,7 @@ final class BluetoothScanner: NSObject, ObservableObject {
             existing?.rssi = newItem.rssi
             existing?.lastSeen = newItem.lastSeen
             self.peripherals[id] = existing ?? newItem
+            self.delegate?.scannerDidUpdatePeripherals(self.peripherals)
         }
     }
 }
@@ -77,7 +86,10 @@ extension BluetoothScanner: BluetoothScannerProtocol {
     func pruneStale(after seconds: TimeInterval = 10) {
         let cutoff = Date().addingTimeInterval(-seconds)
         DispatchQueue.main.async {
-            self.peripherals = self.peripherals.filter { $0.value.lastSeen >= cutoff }
+            self.peripherals = self.peripherals.filter {
+                $0.value.lastSeen >= cutoff
+            }
+            self.delegate?.scannerDidUpdatePeripherals(self.peripherals)
         }
     }
 }
@@ -90,6 +102,11 @@ extension BluetoothScanner: CBCentralManagerDelegate {
         authorization = CBManager.authorization
         state = central.state
 
+        DispatchQueue.main.async {
+            self.delegate?.scannerDidUpdateState(self.state,
+                                                 authorization: self.authorization)
+        }
+
         switch central.state {
         case .poweredOn:
             central.scanForPeripherals(
@@ -98,7 +115,10 @@ extension BluetoothScanner: CBCentralManagerDelegate {
             )
         default:
             central.stopScan()
-            DispatchQueue.main.async { self.peripherals.removeAll() }
+            DispatchQueue.main.async {
+                self.peripherals.removeAll()
+                self.delegate?.scannerDidUpdatePeripherals(self.peripherals)
+            }
         }
     }
 
