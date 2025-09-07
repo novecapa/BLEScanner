@@ -20,6 +20,7 @@ It detects nearby devices, shows their name, UUID, and signal strength (RSSI in 
 
 ## 🖼️ Screenshots
 
+## TODO: 
 *(Add screenshots here after running the app on a real device)*
 
 ---
