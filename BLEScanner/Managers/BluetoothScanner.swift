@@ -44,14 +44,14 @@ final class BluetoothScanner: NSObject, ObservableObject {
     private func upsertPeripheral(_ peripheral: CBPeripheral,
                                   name: String?,
                                   rssi: NSNumber) {
+        guard let name else { return }
         let id = peripheral.identifier
         let newItem = DiscoveredPeripheral(
             id: id,
-            name: name?.isEmpty == false ? name! : "Unknown",
+            name: name,
             rssi: rssi.intValue,
             lastSeen: Date()
         )
-
         DispatchQueue.main.async {
             var existing = self.peripherals[id]
             existing?.name = newItem.name

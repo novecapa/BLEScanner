@@ -10,9 +10,11 @@ import SwiftUI
 struct ScannerView: View {
 
     // MARK: Private
+
     @ObservedObject var viewModel: ScannerViewModel
 
     // MARK: Init
+
     init(viewModel: ScannerViewModel) {
         self.viewModel = viewModel
     }
@@ -23,7 +25,7 @@ struct ScannerView: View {
                 .textScale(.default)
             ScrollView {
                 LazyVStack {
-                    ForEach(viewModel.discovered, id: \.self) { peripheral in
+                    ForEach(viewModel.discovered) { peripheral in
                         HStack {
                             Text(peripheral.name)
                                 .foregroundStyle(.blue)

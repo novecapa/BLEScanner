@@ -12,6 +12,9 @@ struct DiscoveredPeripheral: Identifiable, Hashable {
     var name: String
     var rssi: Int
     var lastSeen: Date
+
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
 extension DiscoveredPeripheral {
