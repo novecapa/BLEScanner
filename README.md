@@ -11,10 +11,7 @@ It detects nearby devices, shows their name, UUID, and signal strength (RSSI in 
 - Scan for nearby BLE peripherals.
 - Real-time device list with:
   - Device name
-  - UUID identifier
   - Signal strength (RSSI in dBm)
-  - Last seen timestamp
-- Visual signal strength bars.
 - Auto-prune devices that have not been seen for a configurable time.
 - Modern SwiftUI interface.
 
