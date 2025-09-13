@@ -32,9 +32,11 @@ final class BluetoothScanner: NSObject, ObservableObject {
 
     weak var delegate: BluetoothScannerDelegate?
 
+    // MARK: - Private
     private var central: CBCentralManager!
     private let queue = DispatchQueue(label: "ble.scanner.queue")
 
+    // MARK: - Init
     override init() {
         super.init()
         central = CBCentralManager(delegate: self, queue: queue)
@@ -126,8 +128,6 @@ extension BluetoothScanner: CBCentralManagerDelegate {
                         didDiscover peripheral: CBPeripheral,
                         advertisementData: [String : Any],
                         rssi RSSI: NSNumber) {
-
-        // Get RSSI from `didDiscover`
         let name = peripheral.name ?? (advertisementData[CBAdvertisementDataLocalNameKey] as? String)
         upsertPeripheral(peripheral, name: name, rssi: RSSI)
     }

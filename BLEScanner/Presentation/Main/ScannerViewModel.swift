@@ -10,7 +10,6 @@ import CoreBluetooth
 
 final class ScannerViewModel: ObservableObject {
 
-    @Published var showLoader: Bool = false
     @Published var peripherals: [UUID: DiscoveredPeripheral] = [:]
 
     // Throttled publishing
@@ -19,12 +18,10 @@ final class ScannerViewModel: ObservableObject {
     private var pendingSnapshot: [UUID: DiscoveredPeripheral]? = nil
     private var hasPublishedInitialSnapshot = false
 
-    // MARK: Private
-
+    // MARK: - Private
     private var scanner: BluetoothScannerProtocol
 
-    // MARK: Init
-
+    // MARK: - Init
     init(scanner: BluetoothScannerProtocol) {
         self.scanner = scanner
         self.scanner.delegate = self
@@ -35,7 +32,6 @@ final class ScannerViewModel: ObservableObject {
 
 extension ScannerViewModel {
     func onAppear() {
-        showLoader = true
         scanner.start()
         startPublishTimer()
     }
@@ -43,12 +39,36 @@ extension ScannerViewModel {
     func onDisappear() {
         scanner.stop()
         stopPublishTimer()
-        showLoader = false
     }
 
     var discovered: [DiscoveredPeripheral] {
-        let unique = Dictionary(peripherals.map { ($0.key, $0.value) }, uniquingKeysWith: { latest, _ in latest })
+        let unique = Dictionary(peripherals.map { ($0.key, $0.value) },
+                                uniquingKeysWith: { latest, _ in latest })
         return Array(unique.values).sorted { $0.rssi > $1.rssi }
+    }
+}
+
+// MARK: Timer
+
+private extension ScannerViewModel {
+    func startPublishTimer() {
+        stopPublishTimer()
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now(), repeating: publishInterval)
+        timer.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            if let snapshot = self.pendingSnapshot {
+                self.peripherals = snapshot
+                self.pendingSnapshot = nil
+            }
+        }
+        timer.resume()
+        publishTimer = timer
+    }
+
+    func stopPublishTimer() {
+        publishTimer?.cancel()
+        publishTimer = nil
     }
 }
 
@@ -61,7 +81,6 @@ extension ScannerViewModel: BluetoothScannerDelegate {
             if !self.hasPublishedInitialSnapshot {
                 self.peripherals = peripherals
                 self.hasPublishedInitialSnapshot = true
-                self.showLoader = false
             } else {
                 self.pendingSnapshot = peripherals
             }
@@ -71,28 +90,5 @@ extension ScannerViewModel: BluetoothScannerDelegate {
     func scannerDidUpdateState(_ state: CBManagerState,
                                authorization: CBManagerAuthorization) {
         // Optionally react to state/authorization changes (e.g., show banners or update UI flags)
-    }
-}
-
-private extension ScannerViewModel {
-    func startPublishTimer() {
-        stopPublishTimer()
-        let timer = DispatchSource.makeTimerSource(queue: .main)
-        timer.schedule(deadline: .now(), repeating: publishInterval)
-        timer.setEventHandler { [weak self] in
-            guard let self = self else { return }
-            if let snapshot = self.pendingSnapshot {
-                self.peripherals = snapshot
-                self.pendingSnapshot = nil
-                self.showLoader = false
-            }
-        }
-        timer.resume()
-        publishTimer = timer
-    }
-
-    func stopPublishTimer() {
-        publishTimer?.cancel()
-        publishTimer = nil
     }
 }
