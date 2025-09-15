@@ -26,7 +26,7 @@ struct PeripheralCell: View {
                 .foregroundStyle(.green)
         }
         .padding(16)
-        .background(Color.gray.opacity(0.1))
+        .background(Color.gray.opacity(0.2))
     }
 }
 
