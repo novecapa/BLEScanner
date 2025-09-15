@@ -42,9 +42,7 @@ extension ScannerViewModel {
     }
 
     var discovered: [DiscoveredPeripheral] {
-        let unique = Dictionary(peripherals.map { ($0.key, $0.value) },
-                                uniquingKeysWith: { latest, _ in latest })
-        return Array(unique.values).sorted { $0.rssi > $1.rssi }
+        peripherals.values.sorted { $0.rssi > $1.rssi }
     }
 }
 
